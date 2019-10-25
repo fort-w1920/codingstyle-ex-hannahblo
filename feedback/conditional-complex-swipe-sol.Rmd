@@ -1,0 +1,108 @@
+```{r, child = "conditional-complex-swipe-ex.Rmd"}
+```
+
+----------------------------------------------------
+
+### Lösung:
+
+1. Alle überflüssigen `else`-Blöcke enfernen: Das sind in dem Fall hier alle, da 
+jede einzelne `if`-Bedingung hier in einen Ausdruck mündet, der die Funktionsauswertung beendet
+-- entweder mit `stop` oder mit `return`.
+```{r}
+# inputs:
+#   swiper: object representing somebody swiping left or right in a dating app
+#   picture: picture of the person who is being swiped left or right
+#   profile: profile text of the person who is being swiped left or right
+# output: swipe left / swipe right
+swipe <- function(swiper, picture, profile) {
+  if (exists(picture)) {
+    if (is_attractive(picture)) {
+      if (is_sober(swiper)) {
+        if (exists(profile)) {
+          if (seems_too_weird(profile)) {
+            return("swipe left")
+          }
+          if (matches(picture, swiper$preferences)) {
+            return("swipe right")
+          }
+          return("swipe left")
+        }
+        stop("can't decide without a profile.")
+      }
+      return("swipe right")
+    }
+    return("swipe left")
+  }
+  stop("can't decide without a picture.")
+}
+```
+
+Also: 20 statt 26 Zeilen und deutlich weniger Einrückungen. Besser als nichts...
+
+2. *early exits* identifizieren und nach oben schieben: 
+```{r}
+# inputs:
+#   swiper: object representing somebody swiping left or right in a dating app
+#   picture: picture of the person who is being swiped left or right
+#   profile: profile text of the person who is being swiped left or right
+# output: swipe left / swipe right
+swipe <- function(swiper, picture, profile) {
+  if (!exists(picture)) {
+    stop("can't decide without a picture.")
+  }
+  if (!is_attractive(picture)) {
+    return("swipe left")
+  }
+  if (!is.sober(swiper)) {
+    return("swipe right")
+  }
+  if (!exists(profile)) {
+    stop("can't decide without a profile.")
+  }
+  if (seems_too_weird(profile)) {
+    return("swipe left")
+  }
+  if (matches(picture, swiper$preferences)) {
+    return("swipe right")
+  }
+  "swipe left" # return reserved for 'early exits'
+}
+```
+
+Struktur wird wesentlich klarer:  
+a) Verfügbarkeit des Bildes und Attraktivität der abgebildeten Person entscheiden primär.  
+b) Existenz und Inhalt eines Profiltexts sind betrunken Wischenden dann einerlei.  
+c) Nüchtern Wischende benötigen einen Profiltext um eine Entscheidung zu treffen.  
+d) Nüchtern Wischende wischen links falls der Profiltext Alarmglocken schrillen lässt oder das Bild nicht den optischen Vorlieben entspricht.  
+
+3. Also Fallunterscheidungen in d) nochmal zusammenführen: 
+
+```{r}
+# inputs:
+#   swiper: object representing somebody swiping left or right in a dating app
+#   picture: picture of the person who is being swiped left or right
+#   profile: profile text of the person who is being swiped left or right
+# output: swipe left / swipe right
+swipe <- function(swiper, picture, profile) {
+  if (!exists(picture)) {
+    stop("can't decide without a picture.")
+  }
+  if (!is_attractive(picture)) {
+    return("swipe left")
+  }
+  if (!is.sober(swiper)) {
+    return("swipe right")
+  }
+  if (!exists(profile)) {
+    stop("can't decide without a profile.")
+  }
+  if (seems_too_weird(profile) |
+    !matches(picture, swiper$preferences)) {
+    return("swipe left")
+  }
+  "swipe right" # return reserved for 'early exits'
+}
+```
+
+Immer noch einigermaßen kompliziert, aber nur noch ein Level an Einrückungen und 
+damit deutlich einfacher zu verstehen wann was passiert. 
